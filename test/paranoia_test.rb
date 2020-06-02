@@ -131,6 +131,64 @@ class ParanoiaTest < test_framework
     assert model.instance_variable_get(:@after_commit_callback_called)
   end
 
+  def test_delete_all
+    model = ParanoidModel
+    count = 3
+    models = count.times.map { model.new }
+    assert_equal 0, model.count
+    models.each(&:save!)
+    
+    assert_equal count, model.count
+    model.delete_all
+
+    assert_equal 0, model.count
+    assert_equal count, model.with_deleted.count
+
+    assert model.with_deleted.all?(&:deleted?)
+  end
+
+  def test_delete_all_for_non_paranoid_model
+    model = PlainModel
+    count = 3
+    models = count.times.map { model.new }
+    assert_equal 0, model.count
+    models.each(&:save!)
+
+    assert_equal count, model.count
+    model.delete_all
+
+    assert_equal 0, model.count
+    assert_equal 0, model.unscoped.count
+  end
+
+  def test_destroy_all
+    model = ParanoidModel
+    count = 3
+    models = count.times.map { model.new }
+    assert_equal 0, model.count
+    models.each(&:save!)
+
+    assert_equal count, model.count
+    model.destroy_all
+
+    assert_equal 0, model.count
+    assert_equal 3, model.unscoped.count
+  end
+
+  def test_destroy_all_for_non_paranoid_model
+    model = PlainModel
+    count = 3
+    models = count.times.map { model.new }
+    assert_equal 0, model.count
+    models.each(&:save!)
+
+    assert_equal count, model.count
+    model.destroy_all
+
+    assert_equal 0, model.count
+    assert_equal 0, model.unscoped.count
+  end
+
   def test_destroy_behavior_for_freshly_loaded_plain_models_callbacks
     model = CallbackModel.new
     model.save

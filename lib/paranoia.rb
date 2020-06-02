@@ -5,6 +5,8 @@ if [ActiveRecord::VERSION::MAJOR, ActiveRecord::VERSION::MINOR] == [5, 2] ||
   require 'paranoia/active_record_5_2'
 end
 
+require 'byebug'
+
 module Paranoia
   @@default_sentinel_value = nil
 
@@ -23,6 +25,11 @@ module Paranoia
 
   module Query
     def paranoid? ; true ; end
+
+    def delete_all(conditions=nil)
+      return super unless paranoid?
+      where(conditions).update_all(self.new.send :paranoia_destroy_attributes)
+    end
 
     def with_deleted
       if ActiveRecord::VERSION::STRING >= "4.1"
